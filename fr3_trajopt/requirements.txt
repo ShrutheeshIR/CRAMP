@@ -1,0 +1,5 @@
+# Pinned nightly wheel, same pin as rby1-constrained-planning (see its pyproject.toml /
+# CLAUDE.md). Nightlies are retained ~56 days -- bump this pin deliberately, not lazily.
+# Requires: pip install -r requirements.txt --extra-index-url https://drake-packages.csail.mit.edu/whl/nightly
+drake==0.0.20260806
+numpy

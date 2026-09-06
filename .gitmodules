@@ -1,0 +1,9 @@
+[submodule "cricket"]
+	path = cricket
+	url = git@github.com:CoMMALab/cricket.git
+[submodule "vamp"]
+	path = vamp
+	url = https://github.com/CoMMALab/vamp.git
+[submodule "fr3_trajopt/vamp"]
+	path = fr3_trajopt/vamp
+	url = https://github.com/CoMMALab/vamp.git

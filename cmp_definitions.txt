@@ -1,0 +1,89 @@
+Configuration space. Let C \subset \mathbb{R}^d be the robot's configuration space, d the number of degrees of freedom, so q \in C (e.g. actuated joint angles). Let C_free \subset C be the subset of collision-free configurations.
+
+Motion planning. The goal of motion planning (MP) is to find a continuous trajectory
+
+    sigma : [0,1] -> C_free
+
+such that
+
+    sigma(0) = q_init,   sigma(1) = q_goal,   sigma(t) \in C_free  for all t \in [0,1].
+
+Task space and forward kinematics. The robot interacts with its environment through its end-effector(s). Let T \subset SE(3) be the space reachable by the end-effector, given by the forward kinematics map FK: C -> SE(3),
+
+    T = FK(C) = { t \in SE(3) : there exists q \in C such that t = FK(q) }.
+
+Constrained configuration space. In constrained motion planning (CMP), the trajectory must additionally satisfy task constraints, typically expressed on C. Let F : C -> \mathbb{R}^k be an implicit constraint function, k the dimensionality of the constraint. This defines a lower-dimensional constraint manifold
+
+    M = { q \in C : F(q) = 0 } \subset C,
+
+and the constrained collision-free space
+
+    M_free = M \cap C_free.
+
+End-effector constraints as a special case. A widely used class of constraints restricts the end-effector pose to a subset T_c \subset T, itself defined implicitly by a function g : SE(3) -> \mathbb{R}^k,
+
+    T_c = { t \in SE(3) : g(t) = 0 }.
+
+This induces the configuration-space constraint function F(q) := g(FK(q)), so that
+
+    M = { q \in C : FK(q) \in T_c }.
+
+Constrained motion planning. The goal of CMP is then to find a continuous trajectory
+
+    sigma : [0,1] -> M_free
+
+such that
+
+    sigma(0) = q_init,   sigma(1) = q_goal,   sigma(t) \in M_free  for all t \in [0,1].
+
+---
+
+Notes on corrections made (for reference when writing the paper intro):
+
+1. C vs \mathcal{C}: pick one symbol and use it throughout; used C (plain) here consistently — swap to \mathcal{C} in LaTeX if you prefer script style, just be consistent.
+
+2. F(q) = R^k -> F(q) = 0 with F: C -> R^k: a function value can equal a point (0 in R^k), never a whole space. This is the standard "implicit manifold as a zero-level-set" definition, and it's why M is a codimension-k submanifold of C — worth stating explicitly, since it's the source of CMP's difficulty (M generically has measure zero in C).
+
+3. T = { t : t = FK(q) } had an unbound q — fixed by existentially quantifying it, or more cleanly writing T = FK(C) (image of a map).
+
+4. M_free was asserted as a codomain but never defined in the original draft — added M_free = M \cap C_free so the final CMP statement is grounded.
+
+5. End-effector constraint derivation: the original jumped straight to "F(q) now becomes FK(q) \in T_c", but F was defined as an R^k-valued function while FK(q) \in T_c is a set-membership statement — different types. Fixed by introducing g on SE(3) and composing F = g \circ FK, keeping F a genuine R^k-valued function and showing the end-effector case is a special instance of the general implicit-constraint definition.
+
+6. Added "continuous" explicitly to both sigma definitions.
+
+---
+
+Parameterized planning (bimanual case). Let P be a parameter space, and let p \in P denote a "configuration" in this reduced representation. For a bimanual robot, realizing p as an actual robot configuration is a two-step, per-arm process:
+
+    h : P -> T_c^(1) x T_c^(2),      h(p) = (t_1, t_2),
+
+where h maps a parameter to a pair of task-space poses, one per end-effector, each lying in that arm's constrained task space T_c^(i) \subset T^(i). Each pose is then resolved to a configuration via that arm's inverse kinematics,
+
+    IK_1 : T_c^(1) -> C^(1),      IK_2 : T_c^(2) -> C^(2).
+
+Define the composite realization map
+
+    Phi : P -> C,      Phi := (IK_1 x IK_2) o h,      Phi(p) = ( IK_1(t_1), IK_2(t_2) ),   (t_1, t_2) = h(p),
+
+such that
+
+    Phi(p) \in M   for all p \in P,
+
+i.e. P is constructed so that every parameter value already satisfies the task constraint by design (unlike C, where satisfying F(q) = 0 is generically a measure-zero condition). Define the parameterized free set
+
+    P_free = { p \in P : Phi(p) \in M_free }.
+
+The CMP problem of finding sigma : [0,1] -> M_free is then transformed into the equivalent problem of finding a continuous trajectory
+
+    tau : [0,1] -> P_free
+
+such that
+
+    tau(0) = p_init,   tau(1) = p_goal,   tau(t) \in P_free  for all t \in [0,1],
+
+where p_init, p_goal satisfy Phi(p_init) = q_init, Phi(p_goal) = q_goal. The corresponding robot trajectory is then recovered by composing with Phi:
+
+    sigma(t) := Phi(tau(t)),   t \in [0,1],
+
+which by construction satisfies sigma(t) \in M_free for all t, so a solution tau to the parameterized problem yields a solution sigma to the original CMP problem.
