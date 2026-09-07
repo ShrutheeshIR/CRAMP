@@ -1,1 +1,14 @@
 rby1-constrained-planning/
+
+# Assistant-facing and in-progress writing artifacts -- this repo may be pushed
+# upstream, so neither belongs in its history.
+CLAUDE.md
+PVAMP.pdf
+
+# Generated figure/animation artifacts. Only the scripts under scripts/figures/
+# that produce them are tracked.
+out/
+
+# Python bytecode
+__pycache__/
+*.pyc
